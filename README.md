@@ -13,14 +13,6 @@ The code will be made public as soon as the article is published. In the meantim
 - [@Antonio Guerriero](https://www.docenti.unina.it/#!/professor/414e544f4e494f47554552524945524f4752524e544e39324d3036483933314c/riferimenti)
 - [@Massimo Ficco](https://docenti.unisa.it/058291/home)
 
-## Mention our work
-```
-@article{DDoS_microservices,
-  author    = {P. Fusco and G.P. Rimoli and A. Guerriero and  M. Ficco},
-  title     = {Energy saving and continuous learning in resource-constrained MCUs by on-board training and pruning},
-  journal   = {FGCS 2025},
-  year      = {2025}
-}
-```
+
 ## Acknowledgements
 The work is part of the research activities realized within the projects FLEGREA (CUP. E53D23007950001), Bando PRIN 2022, as well as SERICS (PE00000014) under the NRRP MUR program funded by the EU - NGEU.
