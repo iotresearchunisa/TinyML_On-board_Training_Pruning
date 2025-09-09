@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 
@@ -420,19 +421,17 @@ inline void train_with_pruning_stream(MLP *mlp,
                                       int y_cols,
                                       int samples,
                                       int epochs,
-                                      int test_samples,
-                                      REAL prune_percent,
-                                      int *prune_epochs,
-                                      REAL lr_decay,
-                                      int num_prune_epochs,
-                                      int log_freq) {
+                                      int    test_samples,
+                                      REAL   prune_total_percent,   // % totale di pruning sugli iniziali
+                                      int    num_prune_steps,       // quante sessioni di pruning
+                                      REAL   lr_decay,
+                                      int    log_freq ) {
     REAL epoch_loss = 0;
     REAL epoch_accuracy = 0;
     REAL test_loss = 0.0f;
     REAL test_accuracy = 0.0f;
     int correct = 0;
     REAL initial_lr = mlp->learning_rate;
-    int idx = 0;
     int num_classes = mlp->layer_sizes[mlp->num_layers - 1];
 
     REAL output_probs[num_classes];
@@ -455,6 +454,14 @@ inline void train_with_pruning_stream(MLP *mlp,
         !open_csv(test_f, BASE_DIR, "Test_Data.csv", FILE_READ)) {
         FAILURE("Errore apertura file CSV");
     }
+
+    REAL prune_step_percent   = prune_total_percent / num_prune_steps;
+    int prune_schedule[num_prune_steps];
+    for (int i = 0; i < num_prune_steps; i++)
+    {
+        prune_schedule[i] = (int)((double)(i+1) * epochs / (num_prune_steps+1));
+    }
+    int  next_prune_idx = 0;
 
 
     for (int epoch = 0; epoch < epochs; epoch++) {
@@ -493,11 +500,22 @@ inline void train_with_pruning_stream(MLP *mlp,
         epoch_loss /= samples;
 
         /*PUNING*/
-        for (int i = 0; i < num_prune_epochs; i++) {
-            if (0 == prune_epochs[i]) {
-                prune_by_percentage(mlp, prune_percent);
-                last_prune_epoch = 0;
+        if (next_prune_idx < num_prune_steps && epoch == prune_schedule[next_prune_idx])
+        {
+            REAL target_total_prune = (next_prune_idx + 1) * prune_step_percent;
+            int  target_pruned_w    = (int)(initial_weights * target_total_prune / 100.0);
+            int  active             = count_active_weights(mlp);
+            int  already_pruned     = initial_weights - active;
+            int  to_prune_now       = target_pruned_w - already_pruned;
+
+            if (to_prune_now > 0)
+            {
+                REAL step_percent = 100.0 * to_prune_now / active;
+                prune_by_percentage(mlp, step_percent);
             }
+
+            last_prune_epoch = epoch;
+            next_prune_idx++;
         }
 
 
