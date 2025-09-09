@@ -486,7 +486,8 @@ inline void train_with_pruning_stream(MLP *mlp,
             softmax(mlp->activations[mlp->num_layers - 1], output_probs, num_classes);
             one_hot((int) y[0], num_classes, one_hot_target);
 
-            epoch_loss += mse_loss(mlp->activations[mlp->num_layers - 1], one_hot_target, num_classes);
+            //epoch_loss += mse_loss( mlp->activations[mlp->num_layers - 1], one_hot_target, num_classes );
+            epoch_loss += cross_entropy_loss( output_probs, one_hot_target, num_classes );
             correct += accuracy((int) y[0], output_probs, num_classes);
 
             backward_pass(mlp, one_hot_target);
